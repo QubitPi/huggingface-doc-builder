@@ -37,8 +37,8 @@ on:
         type: string
       repo_owner:
         type: string
-        default: 'huggingface'
-        description: "Owner of the repo to build documentation for. Defaults to 'huggingface'."
+        default: 'QubitPi'
+        description: "Owner of the repo to build documentation for. Defaults to 'QubitPi'."
       version_tag_suffix:
         type: string
         default: "src/"
@@ -51,10 +51,21 @@ on:
         type: string
         default: "main"
         description: "Debug purposes only. Revision of `doc-builder` repo to use. Useful to test changes on `doc-builder`."
-
+    secrets:
+      slack-webhook-url:
+        description: |
+          A standard Slack Webhook URL that connects to a Slack channel.
+          This is the same thing as "SLACK_WEBHOOK_URL"; please see
+          https://github.com/marketplace/actions/slack-send#technique-3-slack-incoming-webhook
+          for more info
+        required: true
 
 jobs:
   build_pr_documentation:
+    name: Test Documentation Build
+    outputs:
+      outcome: ${{ job.status }}
+    continue-on-error: true
     runs-on: ubuntu-latest
     container:
       huggingface/transformers-doc-builder
@@ -62,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: 'huggingface/doc-builder'
+          repository: 'QubitPi/huggingface-doc-builder'
           path: doc-builder
           ref: ${{ inputs.doc_builder_revision }}
 
@@ -176,7 +187,12 @@ jobs:
           echo ${{ inputs.commit_sha }} > ./build_dir/commit_sha
           echo ${{ inputs.pr_number }} > ./build_dir/pr_number
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: doc-build-artifact
-          path: build_dir/
+  slack-notification:
+    name: Send Slack Notification
+    if: ${{ always() }}
+    needs: build_pr_documentation
+    uses: QubitPi/hashicorp-aws/.github/workflows/slack-notification.yml@master
+    with:
+      job-status: ${{ needs.build_pr_documentation.outputs.outcome }}
+    secrets:
+      slack-webhook-url: ${{ secrets.slack-webhook-url }}

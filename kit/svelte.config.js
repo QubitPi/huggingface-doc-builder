@@ -37,12 +37,13 @@ const config = {
 		paths: {
 			base: process.argv.includes("dev")
 				? ""
-				: "/docs/" +
-				  (process.env.DOCS_LIBRARY || "transformers") +
-				  "/" +
-				  (process.env.DOCS_VERSION || "main") +
-				  "/" +
-				  (process.env.DOCS_LANGUAGE || "en"),
+				: "/huggingface-transformers",
+//				: "/docs/" +
+//				  (process.env.DOCS_LIBRARY || "transformers") +
+//				  "/" +
+//				  (process.env.DOCS_VERSION || "main") +
+//				  "/" +
+//				  (process.env.DOCS_LANGUAGE || "en"),
 			relative: false,
 		},
 	},
